@@ -6,11 +6,10 @@ needed to transform the input cube to a solved state.
 '''
 import os
 import json
-from flask import Flask, request
+from flask import Flask, request, render_template, jsonify
 from rubik.view.solve import solve
 from rubik.view.rotate import rotate
-
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates', static_folder='assets')
 
 #-----------------------------------
 #  The following code is invoked with the path portion of the URL matches
@@ -20,7 +19,7 @@ app = Flask(__name__)
 @app.route('/')
 def default():
     '''Return welcome information'''
-    return 'welcome to secure software process'
+    return render_template('MainPage.html')
 
 #-----------------------------------
 #  The following code is invoked with the path portion of the URL matches
@@ -44,6 +43,7 @@ def solveServer():
     '''Return face rotation solution set'''
     try:
         userParms = _parseParms(request.args)
+        print(userParms)
         result = solve(userParms)
         print("Response -->", str(result))
         return str(result)
@@ -67,6 +67,19 @@ def rotateServer():
     except Exception as anyException:
         return str(anyException)
 
+
+#-----------------------------------
+#  The following code is invoked when the user submits a cube string in the form
+#         /
+#  It returns a welcome string
+#
+@app.route('/processInput', methods=['POST'])
+def processInput():
+    '''Return welcome information'''
+    data = request.get_json()
+    userInput = data.get('cube')
+    processed_result = solve(data)
+    return jsonify(result=processed_result)
 #-----------------------------------
 #  URL parsing support code
 def _parseParms(queryString):
